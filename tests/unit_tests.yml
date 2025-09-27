@@ -2,7 +2,7 @@ unit_tests:
   - name: test_fact_sales_simple
     model: fact_sales
     given:
-      - input: ref('test_input_orders')
+      - input: ref('int_orders_items')
         rows:
           - order_key: 1
             customer_key: 10
@@ -20,11 +20,21 @@ unit_tests:
             quantity: 1
             extended_price: 50
             discount: 0.0
+      - input: ref('dim_customer')
+        rows:
+          - customer_key: 10
+            is_current_record: true
+          - customer_key: 20
+            is_current_record: true
+      - input: ref('dim_part')
+        rows:
+          - part_key: 100
+          - part_key: 200
     expect:
       rows:
         - order_key: 1
           customer_key: 10
-          net_sales: 90   # 100 * (1 - 0.1)
+          net_sales: 90.0
         - order_key: 2
           customer_key: 20
-          net_sales: 50   # 50 * (1 - 0)
+          net_sales: 50.0
