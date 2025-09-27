@@ -1,26 +1,66 @@
+-- models/gold/agg_promo_impact.sql
 {{ config(materialized='table', tags=['metrics']) }}
 
-with base as (
-  select
-    d.year,
-    d.month_num,
-    (d.year*100 + d.month_num) as month_key,
-    f.net_sales,
-    case when dp.part_type ilike 'PROMO%' then f.net_sales else 0 end as promo_net_sales -- only take sales of promo
-  from {{ ref('fact_sales') }} f
-  join {{ ref('dim_date') }} d   on f.order_date_key = d.date_key   -- ship month is better because real revenue on that date, order may mislead. Ok for the demo.
-  join {{ ref('dim_part') }} dp  on f.part_key = dp.part_key
+WITH base AS (
+    SELECT
+        YEAR(f.order_date) as year,
+        MONTH(f.order_date) as month_num,
+        (YEAR(f.order_date) * 100 + MONTH(f.order_date)) as month_key,
+        f.net_sales,
+        CASE 
+            WHEN p.part_type ILIKE 'PROMO%' THEN f.net_sales 
+            ELSE 0 
+        END as promo_net_sales
+    FROM {{ ref('fact_sales') }} f
+    JOIN {{ ref('dim_product') }} p ON f.part_key = p.part_key
+),
+
+monthly_metrics AS (
+    SELECT
+        year,
+        month_num,
+        month_key,
+        SUM(promo_net_sales) as promo_revenue,
+        SUM(net_sales) as total_revenue,
+        CASE 
+            WHEN SUM(net_sales) = 0 THEN 0
+            ELSE ROUND(100.0 * SUM(promo_net_sales) / SUM(net_sales), 2)
+        END as promo_revenue_pct
+    FROM base
+    GROUP BY 1, 2, 3
 )
 
-select
-  year,
-  month_num,
-  month_key,
-  sum(promo_net_sales) as promo_revenue,
-  sum(net_sales)       as total_revenue,
-  case when sum(net_sales)=0 then 0
-       else round(100.0 * sum(promo_net_sales)/sum(net_sales), 2)
-  end as promo_revenue_pct
-from base
-group by 1,2,3
-order by 1,2
+SELECT
+    year,
+    month_num,
+    month_key,
+    promo_revenue,
+    total_revenue,
+    
+    -- Revenue in billions
+    ROUND(total_revenue / 1000000000, 3) as revenue_billions,
+    
+    -- Promo percentage
+    promo_revenue_pct,
+    
+    -- Month-over-month calculations with NULL for first month
+    CASE 
+        WHEN LAG(total_revenue) OVER (ORDER BY month_key) IS NULL THEN NULL
+        ELSE ROUND(
+            100.0 * (total_revenue - LAG(total_revenue) OVER (ORDER BY month_key)) / 
+            LAG(total_revenue) OVER (ORDER BY month_key), 
+            2
+        )
+    END as revenue_growth_pct,
+    
+    -- Promo percentage point change (not delta from 0)
+    CASE
+        WHEN LAG(promo_revenue_pct) OVER (ORDER BY month_key) IS NULL THEN NULL
+        ELSE ROUND(
+            promo_revenue_pct - LAG(promo_revenue_pct) OVER (ORDER BY month_key), 
+            2
+        )
+    END as promo_pct_delta
+
+FROM monthly_metrics
+ORDER BY year, month_num
