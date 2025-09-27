@@ -15,5 +15,6 @@ models:
       - name: customer_key
         tests:
           - relationships:
-              to: ref('dim_customer')
-              field: customer_key
+              arguments:
+                to: ref('dim_customer')
+                field: customer_key

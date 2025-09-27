@@ -6,8 +6,11 @@ select
   oi.part_key,
   oi.supplier_key,
   oi.order_date,
+  (year(oi.order_date) * 10000 + month(oi.order_date) * 100 + day(oi.order_date)) as date_key,
   oi.quantity,
   oi.extended_price,
   oi.discount,
   (oi.extended_price * (1 - oi.discount)) as net_sales
 from {{ ref('int_orders_items') }} oi
+
+

@@ -6,7 +6,23 @@ sources:
     schema: TPCH_SF1
     tables:
       - name: customer
+        columns:
+          - name: C_CUSTKEY
+            tests: [not_null, unique]
       - name: orders
+        columns:
+          - name: O_ORDERKEY
+            tests: [not_null, unique]
       - name: lineitem
-      - name: nation
+        columns:
+          - name: L_ORDERKEY
+            tests: [not_null]
+          - name: L_LINENUMBER
+            tests: [not_null]
       - name: region
+      - name: nation
+      - name: supplier
+      - name: part
+      - name: partsupp
+    
+      

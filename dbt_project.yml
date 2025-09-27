@@ -9,6 +9,7 @@ macro-paths: ["macros"]
 test-paths: ["tests"]
 snapshot-paths: ["snapshots"]
 analysis-paths: ["analyses"]
+seed-paths: ["seed"]
 
 models:
   sales_demo_project:
@@ -31,3 +32,5 @@ models:
       +materialized: table
       +on_schema_change: sync_all_columns
       +tags: ["gold"]
+flags:
+  require_generic_test_arguments_property: true

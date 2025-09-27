@@ -1,0 +1,46 @@
+version: 2
+
+models:
+  - name: stg_customer
+    config: 
+      contract: 
+        enforced: true
+    columns:
+      - name: customer_key
+        data_type: number
+      - name: nation_key
+        data_type: number
+      - name: account_balance
+        data_type: number
+
+  - name: stg_orders
+    config:  
+      contract: 
+        enforced: true
+    columns:
+      - name: order_key
+        data_type: number
+      - name: customer_key
+        data_type: number
+      - name: order_date
+        data_type: date
+
+  - name: stg_lineitem
+    config:  
+      contract: 
+        enforced: true
+    columns:
+      - name: order_key
+        data_type: number
+      - name: line_number
+        data_type: number
+      - name: part_key
+        data_type: number
+      - name: supplier_key
+        data_type: number
+      - name: quantity
+        data_type: number
+      - name: extended_price
+        data_type: number
+      - name: discount
+        data_type: number
