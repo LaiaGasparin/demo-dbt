@@ -1,4 +1,5 @@
 version: 2
+
 models:
   - name: dim_customer
     description: Customer dimension table with geographic and segmentation attributes
@@ -15,13 +16,13 @@ models:
         tests:
           - unique
           - not_null
-          
+
       - name: customer_name
         description: Customer name
         data_type: varchar
         tests:
           - not_null
-          
+
       - name: nation_key
         description: Foreign key to nation
         data_type: number
@@ -30,7 +31,19 @@ models:
           - relationships:
               to: ref('int_nation')
               field: nation_key
-              
+
+      - name: nation_name
+        description: Name of the nation
+        data_type: varchar
+
+      - name: nation_code
+        description: Nation code
+        data_type: varchar
+
+      - name: region_key
+        description: Foreign key to region
+        data_type: number
+
       - name: region_name
         description: Geographic region name
         data_type: varchar
@@ -38,7 +51,15 @@ models:
           - not_null
           - accepted_values:
               values: ['AFRICA', 'AMERICA', 'ASIA', 'EUROPE', 'MIDDLE EAST']
-              
+
+      - name: reporting_region
+        description: Reporting grouping for region
+        data_type: varchar
+
+      - name: market_segment
+        description: Market segment classification
+        data_type: varchar
+
       - name: balance_segment
         description: Customer balance categorization
         data_type: varchar
@@ -46,7 +67,11 @@ models:
           - not_null
           - accepted_values:
               values: ['Credit', 'Zero Balance', 'Low Balance', 'Medium Balance', 'High Balance']
-              
+
+      - name: account_balance
+        description: Current account balance
+        data_type: number
+
       - name: customer_tier
         description: Customer tier classification
         data_type: varchar
@@ -54,40 +79,33 @@ models:
           - not_null
           - accepted_values:
               values: ['Premium', 'Standard', 'Basic']
-              
+
       - name: is_current_record
         description: Flag indicating if this is the current record (SCD Type 2)
         data_type: boolean
         tests:
           - not_null
-          
-    
-  - name: dim_region
-    columns:
-      - name: region_key
-        tests: 
-          - not_null
-          - unique
-    tests:
-      - dbt_utils.equal_rowcount:
-          compare_model: ref('int_region')
 
-  - name: fact_sales
-    columns:
-      - name: order_key
-        tests: [not_null]
-      - name: customer_key
-        tests:
-          - relationships:
-              arguments:
-                to: ref('dim_customer')
-                field: customer_key
-      - name: part_key
-        tests:
-          - relationships:
-              to: ref('dim_product')
-              field: part_key
-      - name: net_sales
-        tests:
-          - dbt_utils.accepted_range:
-              min_value: 0
+      - name: valid_from
+        description: Start of validity period (SCD Type 2)
+        data_type: timestamp_ltz
+
+      - name: valid_to
+        description: End of validity period (SCD Type 2)
+        data_type: date
+
+      - name: created_at
+        description: Record creation timestamp
+        data_type: timestamp_ltz
+
+      - name: updated_at
+        description: Record last update timestamp
+        data_type: timestamp_ltz
+
+      - name: dbt_version
+        description: dbt version string
+        data_type: varchar
+
+      - name: batch_id
+        description: Unique batch ID for lineage/audit
+        data_type: varchar

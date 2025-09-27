@@ -15,6 +15,8 @@ WITH fact_enriched AS (
         
         -- Date dimensions
         oi.order_date,
+        (year(oi.order_date) * 10000 + month(oi.order_date) * 100 + day(oi.order_date)) as order_date_key,
+
         YEAR(oi.order_date) as order_year,
         QUARTER(oi.order_date) as order_quarter,
         MONTH(oi.order_date) as order_month,
@@ -39,8 +41,8 @@ WITH fact_enriched AS (
         
         -- Measures
         oi.quantity,
-        oi.extended_price,
-        oi.discount,
+        CAST(extended_price AS NUMBER(18,2)) as extended_price,
+        CAST(discount AS NUMBER(5,2)) as discount,
         oi.discount * 100 as discount_pct,
         oi.extended_price * (1 - oi.discount) as net_sales,
         

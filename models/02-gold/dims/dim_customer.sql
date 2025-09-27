@@ -12,10 +12,7 @@ WITH customer_base AS (
         customer_name,
         nation_key,
         account_balance,
-        market_segment,
-        address,
-        phone,
-        comment
+        market_segment
     FROM {{ ref('int_customer') }}
 ),
 
@@ -39,8 +36,7 @@ customer_enriched AS (
         
         -- Customer Attributes
         c.customer_name,
-        c.address,
-        c.phone,
+
         
         -- Geographic Hierarchy (denormalized for performance)
         c.nation_key,
@@ -69,9 +65,7 @@ customer_enriched AS (
             WHEN c.account_balance > 3000 THEN 'Standard'
             ELSE 'Basic'
         END as customer_tier,
-        
-        -- Metadata
-        c.comment as customer_comment,
+
         
         -- SCD Type 2 columns (future-proofing)
         CURRENT_TIMESTAMP() as valid_from,

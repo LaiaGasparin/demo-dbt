@@ -6,7 +6,6 @@ select
   l.part_key,
   l.supplier_key,
   o.order_date,
-  l.ship_date,   
   l.quantity,
   l.extended_price,
   l.discount

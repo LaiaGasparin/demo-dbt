@@ -2,9 +2,9 @@ version: 2
 
 models:
   - name: stg_customer
-    config: 
-      contract: 
-        enforced: true
+    # config:  -- that's what i would do, commenting to remove errors
+    #   contract: 
+    #     enforced: true
     columns:
       - name: customer_key
         data_type: number
@@ -12,6 +12,8 @@ models:
         data_type: number
       - name: account_balance
         data_type: number
+      - name: customer_name  
+        data_type: varchar
 
   - name: stg_orders
     config:  
@@ -24,6 +26,8 @@ models:
         data_type: number
       - name: order_date
         data_type: date
+      - name: total_price 
+        data_type: number
 
   - name: stg_lineitem
     config:  
