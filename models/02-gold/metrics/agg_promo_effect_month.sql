@@ -12,7 +12,7 @@ WITH base AS (
             ELSE 0 
         END as promo_net_sales
     FROM {{ ref('fact_sales') }} f
-    JOIN {{ ref('dim_product') }} p ON f.part_key = p.part_key
+    JOIN {{ ref('dim_part') }} p ON f.part_key = p.part_key
 ),
 
 monthly_metrics AS (
