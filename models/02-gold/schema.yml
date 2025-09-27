@@ -1,0 +1,80 @@
+version: 2
+models:
+  - name: dim_customer
+    description: Customer dimension table with geographic and segmentation attributes
+    config:
+      contract:
+        enforced: true
+    columns:
+      - name: customer_key
+        description: Primary key for customer dimension
+        data_type: number
+        constraints:
+          - type: not_null
+          - type: primary_key
+        tests:
+          - unique
+          - not_null
+          
+      - name: customer_name
+        description: Customer name
+        data_type: varchar
+        tests:
+          - not_null
+          
+      - name: nation_key
+        description: Foreign key to nation
+        data_type: number
+        tests:
+          - not_null
+          - relationships:
+              to: ref('int_nation')
+              field: nation_key
+              
+      - name: region_name
+        description: Geographic region name
+        data_type: varchar
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['AFRICA', 'AMERICA', 'ASIA', 'EUROPE', 'MIDDLE EAST']
+              
+      - name: balance_segment
+        description: Customer balance categorization
+        data_type: varchar
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['Credit', 'Zero Balance', 'Low Balance', 'Medium Balance', 'High Balance']
+              
+      - name: customer_tier
+        description: Customer tier classification
+        data_type: varchar
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['Premium', 'Standard', 'Basic']
+              
+      - name: is_current_record
+        description: Flag indicating if this is the current record (SCD Type 2)
+        data_type: boolean
+        tests:
+          - not_null
+          
+    tests:
+      - dbt_utils.equal_rowcount:
+          compare_model: ref('int_customer')
+  - name: dim_region
+    columns:
+      - name: region_key
+        tests: [not_null, unique]
+  - name: fact_sales
+    columns:
+      - name: order_key
+        tests: [not_null]
+      - name: customer_key
+        tests:
+          - relationships:
+              arguments:
+                to: ref('dim_customer')
+                field: customer_key

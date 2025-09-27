@@ -13,20 +13,20 @@ seed-paths: ["seed"]
 
 models:
   sales_demo_project:
-    bronze:
+    00-bronze:
       +database: BRONZE_DB
       +schema: raw
       +materialized: view
       +tags: ["bronze"]
 
-    silver:
+    01-silver:
       +database: SILVER_DB
       +schema: stg
       +materialized: table
       +on_schema_change: sync_all_columns
       +tags: ["silver"]
 
-    gold:
+    02-gold:
       +database: GOLD_DB
       +schema: marts
       +materialized: table
