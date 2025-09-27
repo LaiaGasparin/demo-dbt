@@ -1,0 +1,30 @@
+unit_tests:
+  - name: test_fact_sales_simple
+    model: fact_sales
+    given:
+      - input: ref('test_input_orders')
+        rows:
+          - order_key: 1
+            customer_key: 10
+            part_key: 100
+            supplier_key: 1000
+            order_date: "2024-01-01"
+            quantity: 2
+            extended_price: 100
+            discount: 0.1
+          - order_key: 2
+            customer_key: 20
+            part_key: 200
+            supplier_key: 2000
+            order_date: "2024-01-02"
+            quantity: 1
+            extended_price: 50
+            discount: 0.0
+    expect:
+      rows:
+        - order_key: 1
+          customer_key: 10
+          net_sales: 90   # 100 * (1 - 0.1)
+        - order_key: 2
+          customer_key: 20
+          net_sales: 50   # 50 * (1 - 0)

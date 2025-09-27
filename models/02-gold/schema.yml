@@ -1,0 +1,111 @@
+version: 2
+
+models:
+  - name: dim_customer
+    description: Customer dimension table with geographic and segmentation attributes
+    config:
+      contract:
+        enforced: true
+    columns:
+      - name: customer_key
+        description: Primary key for customer dimension
+        data_type: number
+        constraints:
+          - type: not_null
+          - type: primary_key
+        tests:
+          - unique
+          - not_null
+
+      - name: customer_name
+        description: Customer name
+        data_type: varchar
+        tests:
+          - not_null
+
+      - name: nation_key
+        description: Foreign key to nation
+        data_type: number
+        tests:
+          - not_null
+          - relationships:
+              to: ref('int_nation')
+              field: nation_key
+
+      - name: nation_name
+        description: Name of the nation
+        data_type: varchar
+
+      - name: nation_code
+        description: Nation code
+        data_type: varchar
+
+      - name: region_key
+        description: Foreign key to region
+        data_type: number
+
+      - name: region_name
+        description: Geographic region name
+        data_type: varchar
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['AFRICA', 'AMERICA', 'ASIA', 'EUROPE', 'MIDDLE EAST']
+
+      - name: reporting_region
+        description: Reporting grouping for region
+        data_type: varchar
+
+      - name: market_segment
+        description: Market segment classification
+        data_type: varchar
+
+      - name: balance_segment
+        description: Customer balance categorization
+        data_type: varchar
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['Credit', 'Zero Balance', 'Low Balance', 'Medium Balance', 'High Balance']
+
+      - name: account_balance
+        description: Current account balance
+        data_type: number
+
+      - name: customer_tier
+        description: Customer tier classification
+        data_type: varchar
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['Premium', 'Standard', 'Basic']
+
+      - name: is_current_record
+        description: Flag indicating if this is the current record (SCD Type 2)
+        data_type: boolean
+        tests:
+          - not_null
+
+      - name: valid_from
+        description: Start of validity period (SCD Type 2)
+        data_type: timestamp_ltz
+
+      - name: valid_to
+        description: End of validity period (SCD Type 2)
+        data_type: date
+
+      - name: created_at
+        description: Record creation timestamp
+        data_type: timestamp_ltz
+
+      - name: updated_at
+        description: Record last update timestamp
+        data_type: timestamp_ltz
+
+      - name: dbt_version
+        description: dbt version string
+        data_type: varchar
+
+      - name: batch_id
+        description: Unique batch ID for lineage/audit
+        data_type: varchar
