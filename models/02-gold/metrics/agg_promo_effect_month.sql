@@ -8,7 +8,7 @@ with base as (
     f.net_sales,
     case when dp.part_type ilike 'PROMO%' then f.net_sales else 0 end as promo_net_sales -- only take sales of promo
   from {{ ref('fact_sales') }} f
-  join {{ ref('dim_date') }} d   on f.ship_date_key = d.date_key   -- ship month then real revenue on that date, order may mislead
+  join {{ ref('dim_date') }} d   on f.order_date_key = d.date_key   -- ship month is better because real revenue on that date, order may mislead. Ok for the demo.
   join {{ ref('dim_part') }} dp  on f.part_key = dp.part_key
 )
 
