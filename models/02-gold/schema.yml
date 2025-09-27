@@ -61,13 +61,17 @@ models:
         tests:
           - not_null
           
-    tests:
-      - dbt_utils.equal_rowcount:
-          compare_model: ref('int_customer')
+    
   - name: dim_region
     columns:
       - name: region_key
-        tests: [not_null, unique]
+        tests: 
+          - not_null
+          - unique
+    tests:
+      - dbt_utils.equal_rowcount:
+          compare_model: ref('int_region')
+
   - name: fact_sales
     columns:
       - name: order_key
@@ -78,3 +82,12 @@ models:
               arguments:
                 to: ref('dim_customer')
                 field: customer_key
+      - name: part_key
+        tests:
+          - relationships:
+              to: ref('dim_product')
+              field: part_key
+      - name: net_sales
+        tests:
+          - dbt_utils.accepted_range:
+              min_value: 0
