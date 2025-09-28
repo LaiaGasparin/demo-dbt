@@ -32,30 +32,6 @@ models:
               to: ref('int_nation')
               field: nation_key
 
-      - name: nation_name
-        description: Name of the nation
-        data_type: varchar
-
-      - name: nation_code
-        description: Nation code
-        data_type: varchar
-
-      - name: region_key
-        description: Foreign key to region
-        data_type: number
-
-      - name: region_name
-        description: Geographic region name
-        data_type: varchar
-        tests:
-          - not_null
-          - accepted_values:
-              values: ['AFRICA', 'AMERICA', 'ASIA', 'EUROPE', 'MIDDLE EAST']
-
-      - name: reporting_region
-        description: Reporting grouping for region
-        data_type: varchar
-
       - name: market_segment
         description: Market segment classification
         data_type: varchar
@@ -80,32 +56,3 @@ models:
           - accepted_values:
               values: ['Premium', 'Standard', 'Basic']
 
-      - name: is_current_record
-        description: Flag indicating if this is the current record (SCD Type 2)
-        data_type: boolean
-        tests:
-          - not_null
-
-      - name: valid_from
-        description: Start of validity period (SCD Type 2)
-        data_type: timestamp_ltz
-
-      - name: valid_to
-        description: End of validity period (SCD Type 2)
-        data_type: date
-
-      - name: created_at
-        description: Record creation timestamp
-        data_type: timestamp_ltz
-
-      - name: updated_at
-        description: Record last update timestamp
-        data_type: timestamp_ltz
-
-      - name: dbt_version
-        description: dbt version string
-        data_type: varchar
-
-      - name: batch_id
-        description: Unique batch ID for lineage/audit
-        data_type: varchar

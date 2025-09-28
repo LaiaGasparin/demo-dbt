@@ -36,8 +36,6 @@ models:
     columns:
       - name: order_key
         data_type: number
-      - name: line_number
-        data_type: number
       - name: part_key
         data_type: number
       - name: supplier_key

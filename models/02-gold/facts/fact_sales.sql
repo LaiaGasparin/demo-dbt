@@ -1,61 +1,50 @@
--- models/gold/fact_sales.sql
-{{ config(
-    materialized='table', 
-    on_schema_change='sync_all_columns',
-    cluster_by=['order_date', 'region_name']
-) }}
+{{ config(materialized='table', on_schema_change='sync_all_columns') }}
 
-WITH fact_enriched AS (
-    SELECT
-        -- Keys
-        oi.order_key,
-        oi.customer_key,
-        oi.part_key,
-        oi.supplier_key,
-        
-        -- Date dimensions
-        oi.order_date,
-        (year(oi.order_date) * 10000 + month(oi.order_date) * 100 + day(oi.order_date)) as order_date_key,
+SELECT
+  -- order
+  oi.order_part_sk,
+  oi.order_key,
 
-        YEAR(oi.order_date) as order_year,
-        QUARTER(oi.order_date) as order_quarter,
-        MONTH(oi.order_date) as order_month,
-        WEEK(oi.order_date) as order_week,
-        DAYOFWEEK(oi.order_date) as order_day_of_week,
-        TO_CHAR(oi.order_date, 'YYYY-MM') as order_month_name,
-        TO_CHAR(oi.order_date, 'DY') as order_day_name,
-        
-        -- Customer attributes (denormalized for performance)
-        c.customer_name,
-        c.market_segment,
-        c.customer_tier,
-        c.balance_segment,
-        c.region_name,
-        c.nation_name,
-        c.reporting_region,
-        
-        -- Product attributes (denormalized)
-        p.part_name,
-        p.brand,
-        p.retail_price,
-        
-        -- Measures
-        oi.quantity,
-        CAST(extended_price AS NUMBER(18,2)) as extended_price,
-        CAST(discount AS NUMBER(5,2)) as discount,
-        oi.discount * 100 as discount_pct,
-        oi.extended_price * (1 - oi.discount) as net_sales,
-        
-        -- Calculated measures
-        oi.extended_price - (oi.extended_price * (1 - oi.discount)) as discount_amount,
-        (oi.extended_price * (1 - oi.discount)) / NULLIF(oi.quantity, 0) as unit_price
-        
-    FROM {{ ref('int_orders_items') }} oi
-    LEFT JOIN {{ ref('dim_customer') }} c 
-        ON oi.customer_key = c.customer_key 
-        AND c.is_current_record = TRUE
-    LEFT JOIN {{ ref('dim_part') }} p 
-        ON oi.part_key = p.part_key
-)
 
-SELECT * FROM fact_enriched
+  -- location
+  c.nation_key,
+  n.region_key,
+  r.reporting_region,
+
+  -- customer
+  oi.customer_key,
+  c.market_segment,
+  c.customer_tier,
+  c.balance_segment,
+
+  -- product
+  oi.part_key,
+  p.is_promo,
+
+  -- date
+  oi.order_date_key,
+  oi.order_date,
+  d.date_day,
+  DATE_TRUNC('month', d.date_day)   AS date_month, -- if DATE_DAY = '2025-09-27', then month_start = '2025-09-01' - to be added in the dim_date
+  d.quarter,
+  d.year,
+
+  -- supplier
+  oi.supplier_key,
+
+  -- amounts
+  oi.quantity,
+  oi.extended_price_with_discount,
+  oi.extended_cost,
+  oi.extended_net,
+  oi.discount
+
+
+
+FROM {{ ref('dim_order_item') }} oi
+LEFT JOIN {{ ref('dim_date') }}     d ON oi.order_date_key = d.date_key
+LEFT JOIN {{ ref('dim_customer') }} c ON oi.customer_key   = c.customer_key 
+LEFT JOIN {{ ref('dim_part') }}     p ON oi.part_key       = p.part_key
+LEFT JOIN {{ ref('dim_partsupp')}} ps ON oi.supplier_key = ps.supplier_key AND oi.part_key = ps.part_key
+LEFT JOIN {{ ref('dim_nation') }}   n  ON c.nation_key = n.nation_key
+LEFT JOIN {{ ref('dim_region') }}   r  ON n.region_key = r.region_key

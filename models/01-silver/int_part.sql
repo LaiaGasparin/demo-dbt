@@ -6,7 +6,9 @@ select
   manufacturer,
   brand,
   part_type,
-  part_size,
-  container,
+  case 
+    when part_type like 'PROMO%' then true
+    else false
+  end as is_promo,
   cast(retail_price as number(18,2)) as retail_price
 from {{ ref('stg_part') }}

@@ -1,66 +1,48 @@
--- models/gold/agg_promo_impact.sql
-{{ config(materialized='table', tags=['metrics']) }}
+{{ config(
+    materialized='table',
+    tags=['metrics', 'gold'],
+    on_schema_change='sync_all_columns',
+    cluster_by=['date_month']
+) }}
 
 WITH base AS (
     SELECT
-        YEAR(f.order_date) as year,
-        MONTH(f.order_date) as month_num,
-        (YEAR(f.order_date) * 100 + MONTH(f.order_date)) as month_key,
-        f.net_sales,
-        CASE 
-            WHEN p.part_type ILIKE 'PROMO%' THEN f.net_sales 
-            ELSE 0 
-        END as promo_net_sales
-    FROM {{ ref('fact_sales') }} f
-    JOIN {{ ref('dim_part') }} p ON f.part_key = p.part_key
+        date_month,
+        is_promo,
+        extended_net
+    FROM {{ ref('fact_sales') }}  -- Use denormalized fact table
 ),
 
-monthly_metrics AS (
+monthly_promo AS (
     SELECT
-        year,
-        month_num,
-        month_key,
-        SUM(promo_net_sales) as promo_revenue,
-        SUM(net_sales) as total_revenue,
-        CASE 
-            WHEN SUM(net_sales) = 0 THEN 0
-            ELSE ROUND(100.0 * SUM(promo_net_sales) / SUM(net_sales), 2)
-        END as promo_revenue_pct
+        date_month,
+        SUM(CASE WHEN is_promo = true THEN extended_net ELSE 0 END) AS promo_revenue,
+        SUM(extended_net) AS total_revenue
     FROM base
-    GROUP BY 1, 2, 3
+    GROUP BY date_month
+),
+
+final AS (
+    SELECT
+        date_month,
+        promo_revenue,
+        total_revenue,
+        ROUND(
+            100.0 * promo_revenue / NULLIF(total_revenue, 0),
+            2
+        ) AS promo_revenue_pct,
+        ROUND(
+            100.0 * (total_revenue - LAG(total_revenue) OVER (ORDER BY date_month)) 
+            / NULLIF(LAG(total_revenue) OVER (ORDER BY date_month), 0),
+            2
+        ) AS revenue_growth_pct,
+        ROUND(
+            (100.0 * promo_revenue / NULLIF(total_revenue, 0)) - 
+            LAG(100.0 * promo_revenue / NULLIF(total_revenue, 0)) OVER (ORDER BY date_month),
+            2
+        ) AS promo_share_delta_pp
+    FROM monthly_promo
 )
 
-SELECT
-    year,
-    month_num,
-    month_key,
-    promo_revenue,
-    total_revenue,
-    
-    -- Revenue in billions
-    ROUND(total_revenue / 1000000000, 3) as revenue_billions,
-    
-    -- Promo percentage
-    promo_revenue_pct,
-    
-    -- Month-over-month calculations with NULL for first month
-    CASE 
-        WHEN LAG(total_revenue) OVER (ORDER BY month_key) IS NULL THEN NULL
-        ELSE ROUND(
-            100.0 * (total_revenue - LAG(total_revenue) OVER (ORDER BY month_key)) / 
-            LAG(total_revenue) OVER (ORDER BY month_key), 
-            2
-        )
-    END as revenue_growth_pct,
-    
-    -- Promo percentage point change (not delta from 0)
-    CASE
-        WHEN LAG(promo_revenue_pct) OVER (ORDER BY month_key) IS NULL THEN NULL
-        ELSE ROUND(
-            promo_revenue_pct - LAG(promo_revenue_pct) OVER (ORDER BY month_key), 
-            2
-        )
-    END as promo_pct_delta
-
-FROM monthly_metrics
-ORDER BY year, month_num
+SELECT * FROM final
+ORDER BY date_month
