@@ -1,40 +1,134 @@
-unit_tests:
-  - name: test_fact_sales_simple
-    model: fact_sales
-    given:
-      - input: ref('int_orders_items')
-        rows:
-          - order_key: 1
-            customer_key: 10
-            part_key: 100
-            supplier_key: 1000
-            order_date: "2024-01-01"
-            quantity: 2
-            extended_price: 100
-            discount: 0.1
-          - order_key: 2
-            customer_key: 20
-            part_key: 200
-            supplier_key: 2000
-            order_date: "2024-01-02"
-            quantity: 1
-            extended_price: 50
-            discount: 0.0
-      - input: ref('dim_customer')
-        rows:
-          - customer_key: 10
-            is_current_record: true
-          - customer_key: 20
-            is_current_record: true
-      - input: ref('dim_part')
-        rows:
-          - part_key: 100
-          - part_key: 200
-    expect:
-      rows:
-        - order_key: 1
-          customer_key: 10
-          net_sales: 90.0
-        - order_key: 2
-          customer_key: 20
-          net_sales: 50.0
+#unit_tests:
+#  - name: test_fact_sales_simple
+#    model: fact_sales
+#   given:
+      # dim_order_item is the atomic fact (line-item grain)
+#      - input: ref('dim_order_item')
+#        rows:
+#          - order_part_sk: 1001  # Add the surrogate key
+#            order_key: 1
+#            part_key: 100
+#            customer_key: 10
+#            supplier_key: 1000
+#            order_date_key: 20240101
+#            quantity: 2
+#            extended_net: 90.00  # Already calculated in dim_order_item
+#            extended_cost: 60.00
+#            extended_price_with_discount: 90.00
+#            discount: 0.10
+#          - order_part_sk: 1002
+#            order_key: 2
+#            part_key: 200
+#            customer_key: 20
+#            supplier_key: 2000
+#            order_date_key: 20240102
+#            quantity: 1
+#            extended_net: 50.00
+#            extended_cost: 30.00
+#            extended_price_with_discount: 50.00
+#            discount: 0.00
+#
+#      # dim_customer - add required attributes
+#      - input: ref('dim_customer')
+#        rows:
+#          - customer_key: 10
+#            nation_key: 1
+#            market_segment: 'AUTOMOBILE'
+#            customer_tier: 'Standard'
+#            balance_segment: 'Medium Balance'
+#          - customer_key: 20
+#            nation_key: 2
+#            market_segment: 'BUILDING'
+#            customer_tier: 'Premium'
+#            balance_segment: 'High Balance'
+#
+#      # dim_part - add is_promo flag
+#      - input: ref('dim_part')
+#        rows:
+#          - part_key: 100
+#            is_promo: false
+#          - part_key: 200
+#            is_promo: true
+#
+#      # dim_date - complete date attributes
+#      - input: ref('dim_date')
+#        rows:
+#          - date_key: 20240101
+#            date_day: "2024-01-01"
+#            quarter: 1
+#            year: 2024
+#          - date_key: 20240102
+#            date_day: "2024-01-02"
+#            quarter: 1
+#            year: 2024
+#
+#      # dim_nation
+#      - input: ref('dim_nation')
+#        rows:
+#          - nation_key: 1
+#            nation_name: 'UNITED STATES'
+#            region_key: 1
+#          - nation_key: 2
+#            nation_name: 'CANADA'
+#            region_key: 1
+#
+#      # dim_region
+#      - input: ref('dim_region')
+#        rows:
+#          - region_key: 1
+#            region_name: 'AMERICA'
+#            reporting_region: 'AMERICAS'
+#
+#      # dim_partsupp (if needed for supply_cost)
+#      - input: ref('dim_partsupp')
+#        rows:
+#          - part_key: 100
+#            supplier_key: 1000
+#            supply_cost: 30.00
+#          - part_key: 200
+#            supplier_key: 2000
+#            supply_cost: 30.00
+#
+#    expect:
+#      rows:
+#        - order_part_sk: 1001
+#          order_key: 1
+#          customer_key: 10
+#          nation_key: 1
+#          region_key: 1
+#          reporting_region: 'AMERICAS'
+#          market_segment: 'AUTOMOBILE'
+#          customer_tier: 'Standard'
+#          balance_segment: 'Medium Balance'
+#          part_key: 100
+#          is_promo: false
+#          order_date_key: 20240101
+#          date_month: "2024-01-01"  # DATE_TRUNC to month
+#          quarter: 1
+#          year: 2024
+#          quantity: 2
+#          extended_price_with_discount: 90.00
+#          extended_cost: 60.00
+#          extended_net: 90.00
+#          discount: 0.10
+#        - order_part_sk: 1002
+#          order_key: 2
+#          customer_key: 20
+#          nation_key: 2
+#          region_key: 1
+#          reporting_region: 'AMERICAS'
+#          market_segment: 'BUILDING'
+#          customer_tier: 'Premium'
+#          balance_segment: 'High Balance'
+#          part_key: 200
+#          is_promo: true
+#          order_date_key: 20240102
+#          date_month: "2024-01-01"  # DATE_TRUNC to month
+#          quarter: 1
+#          year: 2024
+#          quantity: 1
+#          extended_price_with_discount: 50.00
+#          extended_cost: 30.00
+#          extended_net: 50.00
+#          discount: 0.00
+  

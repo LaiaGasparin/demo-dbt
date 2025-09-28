@@ -5,7 +5,6 @@ select
   part_name,
   brand,
   part_type,
-  part_size,
-  container,
-  retail_price
+  retail_price,
+  is_promo
 from {{ ref('int_part') }}
